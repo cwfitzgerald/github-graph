@@ -10,7 +10,9 @@ chrono = { version = "0.4.39", features = ["serde"] }
 eframe = "0.30.0"
 egui_plot = "0.30.0"
 futures-util = "0.3.31"
-octocrab = { version = "0.42.1", features = ["stream"] }
+octocrab = { version = "0.42.1", features = [
+    "stream",
+], git = "https://github.com/jcreekmore/octocrab/", rev = "fb7f732" }
 pico-args = "0.5.0"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.135"
