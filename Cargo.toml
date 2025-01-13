@@ -1,0 +1,16 @@
+[package]
+name = "github-graph"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+chrono = { version = "0.4.39", features = ["serde"] }
+eframe = "0.30.0"
+egui_plot = "0.30.0"
+futures-util = "0.3.31"
+octocrab = { version = "0.42.1", features = ["stream"] }
+pico-args = "0.5.0"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.135"
+tokio = { version = "1.43.0", features = ["rt-multi-thread", "macros"] }
