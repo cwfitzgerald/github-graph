@@ -2,6 +2,8 @@
 
 This is a simple project to show some statistics of a github project.
 
+![Screenshot](screenshot.png)
+
 ## How to Run
 
 By default, if there is a `data.json` file in the root directory, the project will use it. There is an included `data.json` that shows the stats of the `gfx-rs/wgpu`, `gfx-rs/wgpu-rs`, and `gfx-rs/naga` repositories.
