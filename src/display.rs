@@ -59,7 +59,7 @@ pub fn display() -> anyhow::Result<()> {
                     .show_grid(true)
                     .legend(Legend::default().position(egui_plot::Corner::LeftTop))
                     .x_grid_spacer(grid_spacer)
-                    .y_grid_spacer(log_grid_spacer(5))
+                    .y_grid_spacer(log_grid_spacer(10))
                     .x_axis_formatter(x_formatter)
                     .label_formatter(|name, point| {
                         let date = chrono::DateTime::from_timestamp(point.x as i64, 0)
