@@ -5,7 +5,7 @@ use std::{
 
 use chrono::{DateTime, Datelike, Days, Month, Months, NaiveDate, NaiveTime, TimeDelta, Utc};
 use eframe::{
-    egui::{self, ahash::HashMap},
+    egui::{self, ahash::HashMap, Vec2, ViewportBuilder},
     NativeOptions,
 };
 use egui_plot::{log_grid_spacer, GridInput, GridMark, Legend};
@@ -39,9 +39,14 @@ pub fn display() -> anyhow::Result<()> {
 
     let mut current_tab = 0;
 
+    let mut native_options = NativeOptions::default();
+
+    // Set the viewport to the perfect size for social previews
+    native_options.viewport = ViewportBuilder::default().with_inner_size(Vec2::new(1000.0, 470.0));
+
     eframe::run_simple_native(
         "Github Stats Visualizer",
-        NativeOptions::default(),
+        native_options,
         move |ctx, _frame| {
             egui::CentralPanel::default().show(ctx, |ui| {
                 let mut clicked = false;
