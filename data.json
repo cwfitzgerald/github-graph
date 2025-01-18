@@ -46815,8 +46815,8 @@
     "number": 5009,
     "title": "Image (64bit) atomic support",
     "created_at": "2024-01-07T22:38:08Z",
-    "closed_at": null,
-    "closed_reason": null,
+    "closed_at": "2025-01-15T13:05:15Z",
+    "closed_reason": "completed",
     "is_pr": false
   },
   {
@@ -51845,7 +51845,7 @@
     "number": 5537,
     "title": "64 bit Image Atomics",
     "created_at": "2024-04-15T00:15:14Z",
-    "closed_at": null,
+    "closed_at": "2025-01-15T13:05:14Z",
     "closed_reason": null,
     "is_pr": true
   },
@@ -57975,7 +57975,7 @@
     "number": 6185,
     "title": "Expose conversions between TextureFormat and naga::StorageFormat",
     "created_at": "2024-08-30T23:04:53Z",
-    "closed_at": null,
+    "closed_at": "2025-01-15T17:44:15Z",
     "closed_reason": null,
     "is_pr": true
   },
@@ -58625,8 +58625,8 @@
     "number": 6251,
     "title": "Linux + Nvidia + Vulkan + X11: Judder / lag spikes with PresentMode::Fifo",
     "created_at": "2024-09-10T19:36:54Z",
-    "closed_at": null,
-    "closed_reason": null,
+    "closed_at": "2025-01-16T06:38:54Z",
+    "closed_reason": "not_planned",
     "is_pr": false
   },
   {
@@ -63215,8 +63215,8 @@
     "number": 6731,
     "title": "Lavapipe causes access violation accessing `intersection.world_to_object`",
     "created_at": "2024-12-14T02:53:52Z",
-    "closed_at": null,
-    "closed_reason": null,
+    "closed_at": "2025-01-17T00:04:35Z",
+    "closed_reason": "completed",
     "is_pr": false
   },
   {
@@ -63425,7 +63425,7 @@
     "number": 6752,
     "title": "[spirv] Stop naga causing undefined behavior in `rayQueryGet*Intersection`",
     "created_at": "2024-12-16T05:12:01Z",
-    "closed_at": null,
+    "closed_at": "2025-01-17T00:04:34Z",
     "closed_reason": null,
     "is_pr": true
   },
@@ -63675,7 +63675,7 @@
     "number": 6777,
     "title": "Support DXR in wgpu-hal & naga.",
     "created_at": "2024-12-18T01:17:48Z",
-    "closed_at": null,
+    "closed_at": "2025-01-15T02:28:38Z",
     "closed_reason": null,
     "is_pr": true
   },
@@ -63985,8 +63985,8 @@
     "number": 6808,
     "title": "Benchmarks Create Device When Enumerating Test Cases",
     "created_at": "2024-12-23T02:36:11Z",
-    "closed_at": null,
-    "closed_reason": null,
+    "closed_at": "2025-01-14T23:02:06Z",
+    "closed_reason": "completed",
     "is_pr": false
   },
   {
@@ -64025,8 +64025,8 @@
     "number": 6812,
     "title": "Add a way to notify with `Queue::submit()` to `Vulkan's vk::Semaphore` allocated outside of `wgpu`",
     "created_at": "2024-12-23T06:07:17Z",
-    "closed_at": null,
-    "closed_reason": null,
+    "closed_at": "2025-01-17T16:18:18Z",
+    "closed_reason": "completed",
     "is_pr": false
   },
   {
@@ -64035,7 +64035,7 @@
     "number": 6813,
     "title": "Add a way to notify with Queue::submit() to Vulkan's vk::Semaphore allocated outside of wgpu",
     "created_at": "2024-12-23T06:52:01Z",
-    "closed_at": null,
+    "closed_at": "2025-01-17T16:18:17Z",
     "closed_reason": null,
     "is_pr": true
   },
@@ -64615,7 +64615,7 @@
     "number": 6873,
     "title": "[Ray-tracing] Change index offset to first index",
     "created_at": "2025-01-07T20:19:01Z",
-    "closed_at": null,
+    "closed_at": "2025-01-14T21:56:25Z",
     "closed_reason": null,
     "is_pr": true
   },
@@ -64835,7 +64835,7 @@
     "number": 6895,
     "title": "Separate Out Backend Options into Individual Structs",
     "created_at": "2025-01-11T02:16:23Z",
-    "closed_at": null,
+    "closed_at": "2025-01-15T17:32:15Z",
     "closed_reason": null,
     "is_pr": true
   },
@@ -64865,7 +64865,7 @@
     "number": 6898,
     "title": "fix `>=` in template list matching for `a<b>=c`",
     "created_at": "2025-01-12T23:45:57Z",
-    "closed_at": null,
+    "closed_at": "2025-01-15T17:25:05Z",
     "closed_reason": null,
     "is_pr": true
   },
@@ -65005,15 +65005,15 @@
     "number": 6912,
     "title": "error: creating test list failed, root exited with signal 11 (SIGSEGV)",
     "created_at": "2025-01-14T07:43:49Z",
-    "closed_at": null,
-    "closed_reason": null,
+    "closed_at": "2025-01-15T17:25:03Z",
+    "closed_reason": "not_planned",
     "is_pr": false
   },
   {
     "repo": "gfx-rs/wgpu",
     "author": "sagudev",
     "number": 6913,
-    "title": "[naga] wgsl: implement `pointer_composite_access` extension",
+    "title": "[naga] implement `pointer_composite_access` WGSL language extension",
     "created_at": "2025-01-14T13:06:14Z",
     "closed_at": null,
     "closed_reason": null,
@@ -65043,8 +65043,278 @@
     "repo": "gfx-rs/wgpu",
     "author": "cwfitzgerald",
     "number": 6916,
-    "title": "Fix Bind Group Initialization",
+    "title": "Fix bind group initialization in benchmarks",
     "created_at": "2025-01-14T18:13:57Z",
+    "closed_at": "2025-01-14T23:02:06Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "jimblandy",
+    "number": 6917,
+    "title": "[naga] Consolidate entry point tracing code.",
+    "created_at": "2025-01-14T20:53:31Z",
+    "closed_at": "2025-01-14T21:12:52Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "jimblandy",
+    "number": 6918,
+    "title": "Add CHANGELOG.md entries for jimblandy's PRs.",
+    "created_at": "2025-01-14T22:31:28Z",
+    "closed_at": "2025-01-14T22:45:04Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "sagudev",
+    "number": 6919,
+    "title": "[naga] wgsl overrides does not do autoconversion",
+    "created_at": "2025-01-15T07:46:20Z",
+    "closed_at": "2025-01-15T10:14:19Z",
+    "closed_reason": "completed",
+    "is_pr": false
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "sagudev",
+    "number": 6920,
+    "title": "[naga] wgsl automatic conversion for override initializers",
+    "created_at": "2025-01-15T09:19:52Z",
+    "closed_at": "2025-01-15T10:14:18Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "mycrl",
+    "number": 6921,
+    "title": "Unable to request feature support for NV12 texture on metal",
+    "created_at": "2025-01-15T16:25:16Z",
+    "closed_at": "2025-01-15T17:07:48Z",
+    "closed_reason": "not_planned",
+    "is_pr": false
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "cwfitzgerald",
+    "number": 6923,
+    "title": "Release v24",
+    "created_at": "2025-01-15T21:10:38Z",
+    "closed_at": "2025-01-15T21:29:22Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "brody4hire",
+    "number": 6924,
+    "title": "trace directory path updates",
+    "created_at": "2025-01-16T01:17:48Z",
+    "closed_at": "2025-01-16T14:50:16Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "brody4hire",
+    "number": 6925,
+    "title": "Start using `hashbrown`",
+    "created_at": "2025-01-16T03:03:50Z",
+    "closed_at": "2025-01-16T13:53:37Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "brody4hire",
+    "number": 6926,
+    "title": "no-std support in wgpu-core",
+    "created_at": "2025-01-16T05:10:16Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "nihalkenkre",
+    "number": 6927,
+    "title": "Vulkan Swapchain CreateInfo Validation Error",
+    "created_at": "2025-01-16T11:21:37Z",
+    "closed_at": "2025-01-16T14:43:06Z",
+    "closed_reason": "not_planned",
+    "is_pr": false
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "Vecvec",
+    "number": 6928,
+    "title": "Crates.io repo links are broken.",
+    "created_at": "2025-01-16T13:12:15Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": false
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "jamienicol",
+    "number": 6929,
+    "title": "[naga msl-out hlsl-out] Improve workaround for infinite loops causing undefined behaviour",
+    "created_at": "2025-01-16T14:35:45Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "Wumpf",
+    "number": 6930,
+    "title": "Add \"Most objects in `wgpu` are now `Clone`\" to highlight section",
+    "created_at": "2025-01-16T15:59:55Z",
+    "closed_at": "2025-01-16T16:13:05Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "teoxoy",
+    "number": 6931,
+    "title": "[d3d12] bound check dynamic buffers",
+    "created_at": "2025-01-16T16:27:15Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "adrian17",
+    "number": 6932,
+    "title": "Increased input-to-screen latency on vulkan",
+    "created_at": "2025-01-16T16:33:42Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": false
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "ErichDonGubler",
+    "number": 6933,
+    "title": "Eliminate overflow in query set bounds checks",
+    "created_at": "2025-01-16T19:39:49Z",
+    "closed_at": "2025-01-17T16:36:22Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "kentslaney",
+    "number": 6934,
+    "title": "Compact leak single pass",
+    "created_at": "2025-01-16T21:46:33Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "sagudev",
+    "number": 6935,
+    "title": "[naga] use const ctx for type resolution",
+    "created_at": "2025-01-17T12:39:37Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "Aultus-defora",
+    "number": 6936,
+    "title": "Memory leak on boids example iMac Fusion Drive",
+    "created_at": "2025-01-17T14:09:25Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": false
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "a1phyr",
+    "number": 6937,
+    "title": "Implement `Clone` for `ShaderModule`",
+    "created_at": "2025-01-17T15:22:24Z",
+    "closed_at": "2025-01-17T15:39:47Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "brody4hire",
+    "number": 6938,
+    "title": "use `hashbrown` in `naga` etc.",
+    "created_at": "2025-01-17T16:21:17Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "a1phyr",
+    "number": 6939,
+    "title": "Implement `Clone` for `ShaderModule`",
+    "created_at": "2025-01-17T16:24:04Z",
+    "closed_at": "2025-01-17T16:40:47Z",
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "brody4hire",
+    "number": 6940,
+    "title": "no-std support in naga",
+    "created_at": "2025-01-17T17:27:08Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "cwfitzgerald",
+    "number": 6941,
+    "title": "Add Flush to GL Queue::submit",
+    "created_at": "2025-01-17T20:13:49Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "cwfitzgerald",
+    "number": 6942,
+    "title": "Allow Short Circuting GL Fences",
+    "created_at": "2025-01-18T01:27:05Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": true
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "turbocrime",
+    "number": 6943,
+    "title": "`CallError::ResultValue` is never constructed",
+    "created_at": "2025-01-18T02:54:18Z",
+    "closed_at": null,
+    "closed_reason": null,
+    "is_pr": false
+  },
+  {
+    "repo": "gfx-rs/wgpu",
+    "author": "turbocrime",
+    "number": 6944,
+    "title": "[naga] remove unused `CallError::ResultValue`",
+    "created_at": "2025-01-18T03:32:59Z",
     "closed_at": null,
     "closed_reason": null,
     "is_pr": true

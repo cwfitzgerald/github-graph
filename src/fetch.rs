@@ -1,6 +1,8 @@
 use std::io::Write;
 
+use chrono::{DateTime, Local};
 use futures_util::TryStreamExt;
+use octocrab::models::Rate;
 
 pub async fn fetch() -> anyhow::Result<()> {
     let crab = octocrab::Octocrab::builder()
@@ -12,11 +14,24 @@ pub async fn fetch() -> anyhow::Result<()> {
     issues_from_repo(&crab, "gfx-rs", "naga", &mut issues).await?;
     issues_from_repo(&crab, "gfx-rs", "wgpu-rs", &mut issues).await?;
 
+    println!();
+
     std::fs::write("data.json", serde_json::to_string_pretty(&issues)?)?;
 
-    dbg!(crab.ratelimit().get().await?);
+    print_rate(&crab.ratelimit().get().await?.resources.core);
 
     Ok(())
+}
+
+fn print_rate(rate: &Rate) {
+    println!(
+        "Rate Limit: {}/{} (Reset {})",
+        rate.used,
+        rate.limit,
+        DateTime::from_timestamp(rate.reset as i64, 0)
+            .unwrap()
+            .with_timezone(&Local)
+    );
 }
 
 async fn issues_from_repo(
@@ -54,6 +69,5 @@ async fn issues_from_repo(
             is_pr: issue.pull_request.is_some(),
         })
     }
-    println!();
     Ok(())
 }

@@ -1,6 +1,10 @@
-use std::{collections::VecDeque, ops::Range, time::Instant};
+use std::{
+    collections::{HashMap, VecDeque},
+    ops::Range,
+    time::Instant,
+};
 
-use chrono::{Days, NaiveTime};
+use chrono::{Datelike, Days, Months, NaiveTime};
 use eframe::{
     egui::{self, Vec2, Vec2b, ViewportBuilder},
     NativeOptions,
@@ -16,7 +20,8 @@ enum StateChange {
     Close,
 }
 
-struct Event {
+struct Event<'a> {
+    issue: &'a crate::Issue,
     state_change: StateChange,
     timestamp: chrono::DateTime<chrono::Utc>,
 }
@@ -52,9 +57,13 @@ pub fn display() -> anyhow::Result<()> {
         StateChangeKind::Close,
     );
 
-    let Stacked {
-        top: closed_issue_bars,
-        bottom: open_issue_bars,
+    let BarsAndDiff {
+        bars:
+            Stacked {
+                top: closed_issue_bars,
+                bottom: open_issue_bars,
+            },
+        diff: issue_diff_points,
     } = points_to_stacked_bars(
         Stacked {
             top: &closed_issue_points_per_month,
@@ -64,9 +73,12 @@ pub fn display() -> anyhow::Result<()> {
         true,
     );
 
-    let Stacked {
-        top: closed_pr_bars,
-        bottom: open_pr_bars,
+    let BarsAndDiff {
+        bars: Stacked {
+            top: closed_pr_bars,
+            bottom: open_pr_bars,
+        },
+        diff: pr_diff_points,
     } = points_to_stacked_bars(
         Stacked {
             top: &closed_pr_points_per_month,
@@ -145,13 +157,14 @@ pub fn display() -> anyhow::Result<()> {
                             .clicked();
                     });
 
-                    let (open_points, open_bars, closed_points, closed_bars, name) =
+                    let (open_points, open_bars, closed_points, closed_bars, diff_points, name) =
                         if tab_1_pr_or_issue == 0 {
                             (
                                 &open_issue_points_per_month,
                                 &open_issue_bars,
                                 &closed_issue_points_per_month,
                                 &closed_issue_bars,
+                                &issue_diff_points,
                                 "Issues",
                             )
                         } else {
@@ -160,6 +173,7 @@ pub fn display() -> anyhow::Result<()> {
                                 &open_pr_bars,
                                 &closed_pr_points_per_month,
                                 &closed_pr_bars,
+                                &pr_diff_points,
                                 "PRs",
                             )
                         };
@@ -178,7 +192,7 @@ pub fn display() -> anyhow::Result<()> {
                         .y_axis_min_width(25.0)
                         .set_margin_fraction(Vec2::ZERO)
                         .label_formatter(plot_utils::label_formatter)
-                        .height(remaining_height / 2.0)
+                        .height(remaining_height / 3.0)
                         .link_axis("Open/Closed", Vec2b::new(true, false))
                         .link_cursor("Open/Closed", Vec2b::new(true, false))
                         .show(ui, |ui| {
@@ -212,7 +226,7 @@ pub fn display() -> anyhow::Result<()> {
                         .y_axis_min_width(25.0)
                         .set_margin_fraction(Vec2::ZERO)
                         .label_formatter(plot_utils::label_formatter)
-                        .height(remaining_height / 2.0)
+                        .height(remaining_height / 3.0)
                         .link_axis("Open/Closed", Vec2b::new(true, false))
                         .link_cursor("Open/Closed", Vec2b::new(true, false))
                         .show(ui, |ui| {
@@ -236,6 +250,36 @@ pub fn display() -> anyhow::Result<()> {
                                 .color(egui::Color32::from_rgb(0xab, 0x7d, 0xf8)),
                             );
                         });
+
+                    egui_plot::Plot::new("Difference Values")
+                        .show_axes(true)
+                        .show_grid(true)
+                        .legend(Legend::default().position(egui_plot::Corner::LeftTop))
+                        .allow_zoom(Vec2b::new(true, false))
+                        .allow_drag(Vec2b::new(true, false))
+                        .x_grid_spacer(plot_utils::grid_spacer)
+                        .x_axis_formatter(plot_utils::x_formatter)
+                        .y_grid_spacer(log_grid_spacer(5))
+                        .y_axis_min_width(25.0)
+                        .center_y_axis(true)
+                        .set_margin_fraction(Vec2::ZERO)
+                        .label_formatter(plot_utils::label_formatter)
+                        .height(remaining_height / 3.0)
+                        .link_axis("Open/Closed", Vec2b::new(true, false))
+                        .link_cursor("Open/Closed", Vec2b::new(true, false))
+                        .show(ui, |ui| {
+                            if clicked {
+                                ui.set_auto_bounds(Vec2b::TRUE);
+                            }
+
+                            ui.line(
+                                egui_plot::Line::new(egui_plot::PlotPoints::Owned(
+                                    diff_points.clone(),
+                                ))
+                                .name(format!("{name} Count Diff"))
+                                .color(egui::Color32::from_rgb(0xcc, 0x86, 0x0d)),
+                            );
+                        });
                 }
             });
         },
@@ -243,6 +287,11 @@ pub fn display() -> anyhow::Result<()> {
     .unwrap();
 
     Ok(())
+}
+
+struct BarsAndDiff {
+    bars: Stacked<Vec<egui_plot::Bar>>,
+    diff: Vec<egui_plot::PlotPoint>,
 }
 
 struct Stacked<T> {
@@ -254,9 +303,10 @@ fn points_to_stacked_bars(
     points: Stacked<&[egui_plot::PlotPoint]>,
     width: f64,
     normalize: bool,
-) -> Stacked<Vec<egui_plot::Bar>> {
+) -> BarsAndDiff {
     let mut top_bars = Vec::new();
     let mut bottom_bars = Vec::new();
+    let mut diff = Vec::new();
 
     let mut top_iter = points.top.iter();
     let mut bottom_iter = points.bottom.iter();
@@ -270,6 +320,8 @@ fn points_to_stacked_bars(
         if top.x == bottom.x {
             let mut top_value = top.y;
             let mut bottom_value = bottom.y;
+
+            diff.push(egui_plot::PlotPoint::new(top.x, bottom_value - top_value));
 
             let total = top_value + bottom_value;
 
@@ -285,6 +337,8 @@ fn points_to_stacked_bars(
         } else if top.x < bottom.x {
             let mut top_value = top.y;
 
+            diff.push(egui_plot::PlotPoint::new(top.x, -top_value));
+
             if normalize {
                 top_value = 1.0;
             }
@@ -293,6 +347,8 @@ fn points_to_stacked_bars(
             top_point = top_iter.next();
         } else {
             let mut bottom_value = bottom.y;
+
+            diff.push(egui_plot::PlotPoint::new(bottom.x, bottom_value));
 
             if normalize {
                 bottom_value = 1.0;
@@ -306,6 +362,8 @@ fn points_to_stacked_bars(
     while let Some(top) = top_point {
         let mut top_value = top.y;
 
+        diff.push(egui_plot::PlotPoint::new(top.x, -top_value));
+
         if normalize {
             top_value = 1.0;
         }
@@ -317,6 +375,8 @@ fn points_to_stacked_bars(
     while let Some(bottom) = bottom_point {
         let mut bottom_value = bottom.y;
 
+        diff.push(egui_plot::PlotPoint::new(bottom.x, bottom_value));
+
         if normalize {
             bottom_value = 1.0;
         }
@@ -325,13 +385,15 @@ fn points_to_stacked_bars(
         bottom_point = bottom_iter.next();
     }
 
-    Stacked {
+    let bars = Stacked {
         top: top_bars,
         bottom: bottom_bars,
-    }
+    };
+
+    BarsAndDiff { bars, diff }
 }
 
-fn live_issues<'a, I>(issues: I) -> Vec<egui_plot::PlotPoint>
+fn generate_events<'a, I>(issues: I) -> Vec<Event<'a>>
 where
     I: IntoIterator<Item = &'a crate::Issue>,
 {
@@ -340,18 +402,28 @@ where
     for issue in issues {
         if let Some(closed_at) = issue.closed_at {
             events.push(Event {
+                issue,
                 state_change: StateChange::Close,
                 timestamp: closed_at,
             });
         }
 
         events.push(Event {
+            issue,
             state_change: StateChange::Open,
             timestamp: issue.created_at,
         });
     }
 
     events.sort_unstable_by_key(|event| event.timestamp);
+    events
+}
+
+fn live_issues<'a, I>(issues: I) -> Vec<egui_plot::PlotPoint>
+where
+    I: IntoIterator<Item = &'a crate::Issue>,
+{
+    let events = generate_events(issues);
 
     let mut issue_points = Vec::new();
 
@@ -478,6 +550,56 @@ where
     }
 
     issue_points
+}
+
+struct MonthOfIssues<'a> {
+    timestamp: chrono::DateTime<chrono::Utc>,
+    issues: Vec<&'a crate::Issue>,
+}
+
+///
+fn age_of_issues<'a, I>(issues: I) -> Vec<MonthOfIssues<'a>>
+where
+    I: IntoIterator<Item = &'a crate::Issue>,
+{
+    let events = generate_events(issues);
+
+    let mut open_issues: HashMap<u64, Event<'a>> = HashMap::new();
+    let mut months_of_issues = Vec::<MonthOfIssues<'a>>::new();
+
+    let mut current_time = events.first().unwrap().timestamp;
+    let mut current_month = current_time.month0();
+    let mut current_issues = Vec::new();
+
+    for event in events {
+        let month = event.timestamp.month0();
+
+        if month != current_month {
+            // Add all open issues to the current month
+            current_issues.extend(open_issues.values().map(|event| event.issue));
+
+            months_of_issues.push(MonthOfIssues {
+                timestamp: current_time,
+                issues: current_issues,
+            });
+
+            current_time = current_time.checked_add_months(Months::new(1)).unwrap();
+            current_month = month;
+            current_issues = Vec::new();
+        }
+
+        match event.state_change {
+            StateChange::Open => {
+                open_issues.insert(event.issue.number, event);
+            }
+            StateChange::Close => {
+                open_issues.remove(&event.issue.number).unwrap();
+                current_issues.push(event.issue);
+            }
+        }
+    }
+
+    months_of_issues
 }
 
 #[allow(dead_code)]
