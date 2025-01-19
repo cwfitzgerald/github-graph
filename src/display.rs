@@ -11,10 +11,11 @@ use eframe::{
 };
 use egui_plot::{log_grid_spacer, HLine, Legend};
 
-use crate::{DataType, StateChangeKind};
+use crate::{IssueDatabase, IssueKey, StateChangeKind};
 
 mod plot_utils;
 
+#[derive(Debug, Clone, Copy)]
 enum StateChange {
     Open,
     Close,
@@ -28,32 +29,51 @@ struct Event<'a> {
 
 pub fn display() -> anyhow::Result<()> {
     let data = std::fs::read_to_string("data.json")?;
-    let issues: DataType = serde_json::from_str(&data)?;
+    let issues: IssueDatabase = serde_json::from_str(&data)?;
 
     let start_time = Instant::now();
 
-    let issue_points = live_issues(issues.iter().filter(|issue| !issue.is_pr));
-    let pr_points = live_issues(issues.iter().filter(|issue| issue.is_pr));
+    let issues = issues.issues.values().collect::<Vec<_>>();
 
-    let closed_issue_points = closed_issues(issues.iter().filter(|issue| !issue.is_pr));
-    let closed_pr_points = closed_issues(issues.iter().filter(|issue| issue.is_pr));
+    let issue_points = live_issues(issues.iter().copied().filter(|issue| issue.is_issue()));
+    let pr_points = live_issues(
+        issues
+            .iter()
+            .copied()
+            .filter(|issue| issue.is_non_draft_pr()),
+    );
+
+    let closed_issue_points =
+        closed_issues(issues.iter().copied().filter(|issue| issue.is_issue()));
+    let closed_pr_points = closed_issues(
+        issues
+            .iter()
+            .copied()
+            .filter(|issue| issue.is_non_draft_pr()),
+    );
 
     let open_issue_points_per_month = closed_issues_per_month(
-        issues.iter().filter(|issue| !issue.is_pr),
+        issues.iter().copied().filter(|issue| issue.is_issue()),
         StateChangeKind::Open,
     );
 
     let open_pr_points_per_month = closed_issues_per_month(
-        issues.iter().filter(|issue| issue.is_pr),
+        issues
+            .iter()
+            .copied()
+            .filter(|issue| issue.is_non_draft_pr()),
         StateChangeKind::Open,
     );
 
     let closed_issue_points_per_month = closed_issues_per_month(
-        issues.iter().filter(|issue| !issue.is_pr),
+        issues.iter().copied().filter(|issue| issue.is_issue()),
         StateChangeKind::Close,
     );
     let closed_pr_points_per_month = closed_issues_per_month(
-        issues.iter().filter(|issue| issue.is_pr),
+        issues
+            .iter()
+            .copied()
+            .filter(|issue| issue.is_non_draft_pr()),
         StateChangeKind::Close,
     );
 
@@ -88,8 +108,18 @@ pub fn display() -> anyhow::Result<()> {
         true,
     );
 
-    let months_of_issues = issues_associated_with_month(issues.iter().filter(|issue| !issue.is_pr));
-    let months_of_prs = issues_associated_with_month(issues.iter().filter(|issue| issue.is_pr));
+    let months_of_issues = issues_associated_with_month(
+        issues
+            .iter()
+            .copied()
+            .filter(|issue| issue.is_issue() && issue.repo == "gfx-rs/wgpu"),
+    );
+    let months_of_prs = issues_associated_with_month(
+        issues
+            .iter()
+            .copied()
+            .filter(|issue| issue.is_non_draft_pr() && issue.repo == "gfx-rs/wgpu"),
+    );
 
     let buckets = [
         Bucket {
@@ -130,6 +160,7 @@ pub fn display() -> anyhow::Result<()> {
     let mut current_tab = 0;
 
     let mut tab_1_pr_or_issue = 0;
+    let mut tab_2_pr_or_issue = 0;
 
     let mut native_options = NativeOptions::default();
 
@@ -145,6 +176,7 @@ pub fn display() -> anyhow::Result<()> {
                 ui.horizontal(|ui| {
                     clicked |= ui.selectable_value(&mut current_tab, 0, "Totals").clicked();
                     clicked |= ui.selectable_value(&mut current_tab, 1, "Closed").clicked();
+                    clicked |= ui.selectable_value(&mut current_tab, 2, "Age").clicked();
                 });
 
                 if current_tab == 0 {
@@ -194,35 +226,26 @@ pub fn display() -> anyhow::Result<()> {
                             .clicked();
                     });
 
-                    let (
-                        open_points,
-                        open_bars,
-                        closed_points,
-                        closed_bars,
-                        diff_points,
-                        age_lines,
-                        name,
-                    ) = if tab_1_pr_or_issue == 0 {
-                        (
-                            &open_issue_points_per_month,
-                            &open_issue_bars,
-                            &closed_issue_points_per_month,
-                            &closed_issue_bars,
-                            &issue_diff_points,
-                            &issue_lines,
-                            "Issues",
-                        )
-                    } else {
-                        (
-                            &open_pr_points_per_month,
-                            &open_pr_bars,
-                            &closed_pr_points_per_month,
-                            &closed_pr_bars,
-                            &pr_diff_points,
-                            &pr_lines,
-                            "PRs",
-                        )
-                    };
+                    let (open_points, open_bars, closed_points, closed_bars, diff_points, name) =
+                        if tab_1_pr_or_issue == 0 {
+                            (
+                                &open_issue_points_per_month,
+                                &open_issue_bars,
+                                &closed_issue_points_per_month,
+                                &closed_issue_bars,
+                                &issue_diff_points,
+                                "Issues",
+                            )
+                        } else {
+                            (
+                                &open_pr_points_per_month,
+                                &open_pr_bars,
+                                &closed_pr_points_per_month,
+                                &closed_pr_bars,
+                                &pr_diff_points,
+                                "PRs",
+                            )
+                        };
 
                     let remaining_height = ui.available_size_before_wrap().y;
 
@@ -327,6 +350,13 @@ pub fn display() -> anyhow::Result<()> {
                             );
                         });
                 } else if current_tab == 2 {
+                    ui.horizontal(|ui| {
+                        ui.selectable_value(&mut tab_2_pr_or_issue, 0, "Issues")
+                            .clicked();
+                        ui.selectable_value(&mut tab_2_pr_or_issue, 1, "PRs")
+                            .clicked();
+                    });
+
                     egui_plot::Plot::new("Issue Age")
                         .show_axes(true)
                         .show_grid(true)
@@ -344,8 +374,14 @@ pub fn display() -> anyhow::Result<()> {
                                 ui.set_auto_bounds(Vec2b::TRUE);
                             }
 
+                            let age_lines = if tab_2_pr_or_issue == 0 {
+                                &issue_lines
+                            } else {
+                                &pr_lines
+                            };
+
                             for line in age_lines {
-                                ui.line(line.clone());
+                                ui.line(line.clone().into());
                             }
                         });
                 }
@@ -620,6 +656,13 @@ where
     issue_points
 }
 
+fn floor_month(date: chrono::DateTime<chrono::Utc>) -> chrono::DateTime<chrono::Utc> {
+    date.with_day0(0)
+        .unwrap()
+        .with_time(NaiveTime::MIN)
+        .unwrap()
+}
+
 struct MonthOfIssues<'a> {
     timestamp: chrono::DateTime<chrono::Utc>,
     issues: Vec<&'a crate::Issue>,
@@ -631,17 +674,16 @@ where
 {
     let events = generate_events(issues);
 
-    let mut open_issues: HashMap<u64, Event<'a>> = HashMap::new();
+    let mut open_issues: HashMap<IssueKey, Event<'a>> = HashMap::new();
     let mut months_of_issues = Vec::<MonthOfIssues<'a>>::new();
 
-    let mut current_time = events.first().unwrap().timestamp;
-    let mut current_month = current_time.month0();
+    let mut current_time = floor_month(events.first().unwrap().timestamp);
     let mut current_issues = Vec::new();
 
     for event in events {
-        let month = event.timestamp.month0();
+        let month = floor_month(event.timestamp);
 
-        if month != current_month {
+        if month != current_time {
             // Add all open issues to the current month
             current_issues.extend(open_issues.values().map(|event| event.issue));
 
@@ -650,21 +692,27 @@ where
                 issues: current_issues,
             });
 
-            current_time = current_time.checked_add_months(Months::new(1)).unwrap();
-            current_month = month;
+            current_time = month;
             current_issues = Vec::new();
         }
 
         match event.state_change {
             StateChange::Open => {
-                open_issues.insert(event.issue.number, event);
+                open_issues.insert(event.issue.key(), event);
             }
             StateChange::Close => {
-                open_issues.remove(&event.issue.number).unwrap();
+                open_issues.remove(&event.issue.key()).unwrap();
                 current_issues.push(event.issue);
             }
         }
     }
+
+    // Add the last month
+    current_issues.extend(open_issues.values().map(|event| event.issue));
+    months_of_issues.push(MonthOfIssues {
+        timestamp: current_time,
+        issues: current_issues,
+    });
 
     months_of_issues
 }
@@ -674,20 +722,54 @@ struct Bucket {
     name: &'static str,
 }
 
-fn points_per_month_of_issues(
-    months: &[MonthOfIssues<'_>],
-    buckets: &[Bucket],
-) -> Vec<egui_plot::Line> {
+#[derive(Clone)]
+struct NamedLine {
+    line: Vec<egui_plot::PlotPoint>,
+    name: &'static str,
+}
+
+impl From<NamedLine> for egui_plot::Line {
+    fn from(line: NamedLine) -> Self {
+        egui_plot::Line::new(egui_plot::PlotPoints::Owned(line.line)).name(line.name)
+    }
+}
+
+fn points_per_month_of_issues(months: &[MonthOfIssues<'_>], buckets: &[Bucket]) -> Vec<NamedLine> {
     let mut lines = vec![Vec::new(); buckets.len()];
 
+    let mut average_line = Vec::new();
+
     for month in months {
+        let end_of_month = month.timestamp.checked_add_months(Months::new(1)).unwrap();
+
         let mut counts = vec![0; buckets.len()];
 
+        println!("Month: {}", month.timestamp);
+
+        let mut total_age = TimeDelta::zero();
+
         for issue in &month.issues {
-            let age = month.timestamp - issue.created_at;
+            let end_time = if let Some(closed_at) = issue.closed_at {
+                closed_at.min(end_of_month)
+            } else {
+                end_of_month
+            };
+
+            let age = end_time - issue.created_at;
+
+            println!(
+                "Issue: {} {} Age: {} Opened: {:?} Closed {:?}",
+                issue.repo,
+                issue.number,
+                age.num_days(),
+                issue.created_at,
+                issue.closed_at
+            );
+
+            total_age += age;
 
             for (i, bucket) in buckets.iter().enumerate().rev() {
-                if age < bucket.age {
+                if age > bucket.age {
                     counts[i] += 1;
                     break;
                 }
@@ -700,12 +782,26 @@ fn points_per_month_of_issues(
                 *count as f64,
             ));
         }
+
+        let average_age = total_age / month.issues.len() as i32;
+
+        average_line.push(egui_plot::PlotPoint::new(
+            month.timestamp.timestamp() as f64,
+            average_age.num_days() as f64,
+        ));
     }
 
     let mut result = Vec::with_capacity(buckets.len());
     for (points, bucket) in lines.into_iter().zip(buckets) {
-        result.push(egui_plot::Line::new(egui_plot::PlotPoints::Owned(points)).name(&bucket.name));
+        result.push(NamedLine {
+            line: points,
+            name: bucket.name,
+        });
     }
+    result.push(NamedLine {
+        line: average_line,
+        name: "Average",
+    });
     result
 }
 
