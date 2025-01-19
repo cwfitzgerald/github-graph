@@ -4,7 +4,7 @@ use std::{
     time::Instant,
 };
 
-use chrono::{Datelike, Days, Months, NaiveTime};
+use chrono::{Datelike, Days, Months, NaiveTime, TimeDelta};
 use eframe::{
     egui::{self, Vec2, Vec2b, ViewportBuilder},
     NativeOptions,
@@ -88,6 +88,43 @@ pub fn display() -> anyhow::Result<()> {
         true,
     );
 
+    let months_of_issues = issues_associated_with_month(issues.iter().filter(|issue| !issue.is_pr));
+    let months_of_prs = issues_associated_with_month(issues.iter().filter(|issue| issue.is_pr));
+
+    let buckets = [
+        Bucket {
+            age: TimeDelta::days(1),
+            name: "1 Day",
+        },
+        Bucket {
+            age: TimeDelta::days(7),
+            name: "1 Week",
+        },
+        Bucket {
+            age: TimeDelta::days(14),
+            name: "2 Weeks",
+        },
+        Bucket {
+            age: TimeDelta::days(30),
+            name: "30 Days",
+        },
+        Bucket {
+            age: TimeDelta::days(90),
+            name: "90 Days",
+        },
+        Bucket {
+            age: TimeDelta::days(180),
+            name: "180 Days",
+        },
+        Bucket {
+            age: TimeDelta::days(365),
+            name: "1 Year",
+        },
+    ];
+
+    let issue_lines = points_per_month_of_issues(&months_of_issues, &buckets);
+    let pr_lines = points_per_month_of_issues(&months_of_prs, &buckets);
+
     eprintln!("Computed in {:?}", start_time.elapsed());
 
     let mut current_tab = 0;
@@ -157,26 +194,35 @@ pub fn display() -> anyhow::Result<()> {
                             .clicked();
                     });
 
-                    let (open_points, open_bars, closed_points, closed_bars, diff_points, name) =
-                        if tab_1_pr_or_issue == 0 {
-                            (
-                                &open_issue_points_per_month,
-                                &open_issue_bars,
-                                &closed_issue_points_per_month,
-                                &closed_issue_bars,
-                                &issue_diff_points,
-                                "Issues",
-                            )
-                        } else {
-                            (
-                                &open_pr_points_per_month,
-                                &open_pr_bars,
-                                &closed_pr_points_per_month,
-                                &closed_pr_bars,
-                                &pr_diff_points,
-                                "PRs",
-                            )
-                        };
+                    let (
+                        open_points,
+                        open_bars,
+                        closed_points,
+                        closed_bars,
+                        diff_points,
+                        age_lines,
+                        name,
+                    ) = if tab_1_pr_or_issue == 0 {
+                        (
+                            &open_issue_points_per_month,
+                            &open_issue_bars,
+                            &closed_issue_points_per_month,
+                            &closed_issue_bars,
+                            &issue_diff_points,
+                            &issue_lines,
+                            "Issues",
+                        )
+                    } else {
+                        (
+                            &open_pr_points_per_month,
+                            &open_pr_bars,
+                            &closed_pr_points_per_month,
+                            &closed_pr_bars,
+                            &pr_diff_points,
+                            &pr_lines,
+                            "PRs",
+                        )
+                    };
 
                     let remaining_height = ui.available_size_before_wrap().y;
 
@@ -279,6 +325,28 @@ pub fn display() -> anyhow::Result<()> {
                                 .name(format!("{name} Count Diff"))
                                 .color(egui::Color32::from_rgb(0xcc, 0x86, 0x0d)),
                             );
+                        });
+                } else if current_tab == 2 {
+                    egui_plot::Plot::new("Issue Age")
+                        .show_axes(true)
+                        .show_grid(true)
+                        .legend(Legend::default().position(egui_plot::Corner::LeftTop))
+                        .allow_zoom(Vec2b::new(true, false))
+                        .allow_drag(Vec2b::new(true, false))
+                        .x_grid_spacer(plot_utils::grid_spacer)
+                        .x_axis_formatter(plot_utils::x_formatter)
+                        .y_grid_spacer(log_grid_spacer(10))
+                        .y_axis_min_width(25.0)
+                        .set_margin_fraction(Vec2::ZERO)
+                        .label_formatter(plot_utils::label_formatter)
+                        .show(ui, |ui| {
+                            if clicked {
+                                ui.set_auto_bounds(Vec2b::TRUE);
+                            }
+
+                            for line in age_lines {
+                                ui.line(line.clone());
+                            }
                         });
                 }
             });
@@ -557,8 +625,7 @@ struct MonthOfIssues<'a> {
     issues: Vec<&'a crate::Issue>,
 }
 
-///
-fn age_of_issues<'a, I>(issues: I) -> Vec<MonthOfIssues<'a>>
+fn issues_associated_with_month<'a, I>(issues: I) -> Vec<MonthOfIssues<'a>>
 where
     I: IntoIterator<Item = &'a crate::Issue>,
 {
@@ -600,6 +667,46 @@ where
     }
 
     months_of_issues
+}
+
+struct Bucket {
+    age: TimeDelta,
+    name: &'static str,
+}
+
+fn points_per_month_of_issues(
+    months: &[MonthOfIssues<'_>],
+    buckets: &[Bucket],
+) -> Vec<egui_plot::Line> {
+    let mut lines = vec![Vec::new(); buckets.len()];
+
+    for month in months {
+        let mut counts = vec![0; buckets.len()];
+
+        for issue in &month.issues {
+            let age = month.timestamp - issue.created_at;
+
+            for (i, bucket) in buckets.iter().enumerate().rev() {
+                if age < bucket.age {
+                    counts[i] += 1;
+                    break;
+                }
+            }
+        }
+
+        for (i, count) in counts.iter().enumerate() {
+            lines[i].push(egui_plot::PlotPoint::new(
+                month.timestamp.timestamp() as f64,
+                *count as f64,
+            ));
+        }
+    }
+
+    let mut result = Vec::with_capacity(buckets.len());
+    for (points, bucket) in lines.into_iter().zip(buckets) {
+        result.push(egui_plot::Line::new(egui_plot::PlotPoints::Owned(points)).name(&bucket.name));
+    }
+    result
 }
 
 #[allow(dead_code)]
