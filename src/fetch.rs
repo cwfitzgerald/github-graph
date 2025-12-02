@@ -110,14 +110,18 @@ async fn issues_from_repo(
         }
         pulled_values += 1;
 
-        issues
-            .issues
-            .get_mut(&super::IssueKey {
-                repo: repo_full.clone(),
-                number: pr.number,
-            })
-            .unwrap()
-            .pr = Some(super::PullRequest {
+        let Some(issue) = issues.issues.get_mut(&super::IssueKey {
+            repo: repo_full.clone(),
+            number: pr.number,
+        }) else {
+            println!(
+                "Warning: PR #{} in {}/{} has no matching issue entry",
+                pr.number, owner, repo
+            );
+            continue;
+        };
+
+        issue.pr = Some(super::PullRequest {
             draft: pr.draft.unwrap_or(false),
             merged: pr.merged.unwrap_or(false),
         });
